@@ -1,0 +1,24 @@
+{
+  "job_id": "093c6e69-57ca-4ffc-945b-4a64e39ec7a6",
+  "asset_id": "c338b709-46ec-548a-b84a-c0fcec9a6b38",
+  "route": "MCP create_image_pixflux",
+  "request": {
+    "description": "Cute tiny teal robot holding an ID card, smiling face, centered square pixel art avatar, dark navy background, crisp pixels",
+    "height": 128,
+    "no_background": false,
+    "outline": "single color black outline",
+    "shading": "basic shading",
+    "width": 128
+  },
+  "seed": "omitted",
+  "usage_generations": 1,
+  "verified": {
+    "size": [
+      128,
+      128
+    ],
+    "opaque": true,
+    "robot_with_card": true
+  },
+  "derivative": "assets/telegram-avatar.jpg: 512px nearest-neighbor JPEG"
+}

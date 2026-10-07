@@ -1,0 +1,28 @@
+[
+  {
+    "_comment_prompt": "mettigli un avatar carino in pixel art",
+    "_pixellab": {
+      "paid_call_policy": "explicit_user_run_request_required",
+      "output_directory": "pixellab-pip-generations/avatar",
+      "output_collision_policy": "create_unique"
+    },
+    "MCP create_image_pixflux": {
+      "description": "Cute tiny teal robot holding an ID card, smiling face, centered square pixel art avatar, dark navy background, crisp pixels",
+      "height": 128,
+      "no_background": false,
+      "outline": "single color black outline",
+      "shading": "basic shading",
+      "width": 128
+    }
+  },
+  {
+    "TASK": {
+      "instruction": "Poll get_image with the returned job ID, save the original PNG unchanged. Create a 512px JPEG derivative using nearest-neighbor for Telegram upload.",
+      "outputs": [
+        "avatar.png",
+        "telegram-avatar.jpg"
+      ],
+      "verify": "Original PNG 128x128 and JPEG derivative 512x512; artwork unchanged apart from format and nearest-neighbor scaling."
+    }
+  }
+]
