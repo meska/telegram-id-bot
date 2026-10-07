@@ -16,16 +16,16 @@ def message(chat_type='private', text=None):
 class ReplyTests(unittest.TestCase):
     def test_private_any_content(self):
         self.assertIsNotNone(bot, 'bot implementation missing')
-        self.assertEqual(bot.reply_for(message(), 'idbot'), (123, 'Il tuo ID Telegram: 456'))
+        self.assertEqual(bot.reply_for(message(), 'idbot'), (123, '456'))
 
     def test_group_only_explicitly_addressed_commands(self):
         self.assertIsNone(bot.reply_for(message('group', 'ciao'), 'idbot'))
         self.assertIsNone(bot.reply_for(message('supergroup', '/id'), 'idbot'))
         self.assertIsNone(bot.reply_for(message('group', '/id@other'), 'idbot'))
         self.assertEqual(bot.reply_for(message('group', '/id@IDBOT'), 'idbot'),
-                         (123, 'Il tuo ID Telegram: 456'))
+                         (123, '456'))
         self.assertEqual(bot.reply_for(message('supergroup', '/start@idbot'), 'idbot'),
-                         (123, 'Il tuo ID Telegram: 456'))
+                         (123, '456'))
 
     def test_malformed_updates_are_ignored(self):
         for update in (None, [], {}, {'message': None}, {'message': []},
@@ -82,7 +82,7 @@ class PollTests(unittest.TestCase):
         runner.poll_once()
         self.assertEqual(runner.offset, 2)
         self.assertEqual(api.calls[-1], ('sendMessage',
-                         {'chat_id': 123, 'text': 'Il tuo ID Telegram: 456'}))
+                         {'chat_id': 123, 'text': '456'}))
         self.assertEqual(api.calls[0][1]['offset'], 0)
 
     def test_transient_send_retries_before_advancing(self):

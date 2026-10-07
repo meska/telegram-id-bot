@@ -1,73 +1,52 @@
 # Telegram ID Bot
 
-Bot minimale open source di meskatech, Python 3.9+ e sola libreria standard.
+A tiny open-source Telegram bot by meskatech. Python 3.9+, standard library only.
 
-**Apri il bot:** https://t.me/get_myuidBot
-**Codice pubblico:** https://github.com/meska/telegram-id-bot
+**Open the bot:** https://t.me/get_myuidBot
 
-[![QR per aprire il bot Telegram](assets/telegram-qr.png)](https://t.me/get_myuidBot)
+**Source code:** https://github.com/meska/telegram-id-bot
 
-## Uso
+[![Scan with Telegram to open the bot](assets/telegram-qr.png)](https://t.me/get_myuidBot)
 
-In chat privata invia qualsiasi messaggio (anche foto, sticker o audio):
+## Usage
+
+Send any private message, including a photo, sticker or voice message. The bot replies with **only your numeric Telegram user ID**:
 
 ```text
-Il tuo ID Telegram: 123456789
+123456789
 ```
 
-Nei gruppi risponde solo a `/id@get_myuidBot` e `/start@get_myuidBot`.
-Non risponde ad altri bot, canali o messaggi inviati per conto di un canale.
-L'ID è quello numerico del mittente, non lo username. Nei gruppi la risposta
-è visibile ai partecipanti: preferisci la chat privata.
+On your phone, long-press the reply and choose **Copy**. There is no surrounding text to remove.
 
-## Privacy: nessun archivio degli utenti
+In groups, use `/id@get_myuidBot` or `/start@get_myuidBot`. The reply is visible to the group, so prefer a private chat. Messages from bots, channels or users posting on behalf of a channel are ignored.
 
-Il programma non registra nessuno: niente database, file di stato, analytics,
-storico o log di ID, messaggi e aggiornamenti. Elabora temporaneamente i dati
-in RAM per rispondere; anche l'offset vive solo in memoria. Non conserva gli
-aggiornamenti dopo l'elaborazione e non scarica gli allegati.
-Il token viene letto da un file dedicato e resta in memoria, mai nel codice.
-Gli errori non mostrano URL, token, payload o testo delle eccezioni: soltanto
-codici HTTP (0 indica errore di rete/risposta invalida) o un messaggio generico.
+## Privacy: no user records
 
-**Telegram stesso conserva e gestisce le chat secondo le proprie politiche.**
-Questo bot non rende anonime le conversazioni né cancella i messaggi Telegram.
-L'assenza di persistenza nell'app non garantisce che il sistema operativo non
-usi swap: per requisiti rigorosi disabilitare swap/ibernazione e core dump.
-L'unità fornita disabilita i core dump.
+No database, user registry, analytics, message history, update files or user-data logs. Updates are processed temporarily in RAM; the polling offset is also held only in memory. Attachments are never downloaded. The bot token is read from a dedicated file outside the repository.
 
-## Avvio e affidabilità
+Errors contain only HTTP status codes (0 means a network or invalid-response error) or a generic message, never token-bearing URLs, payloads or exception details.
 
-1. Verifica il token tramite `getMe`.
-2. Controlla `getWebhookInfo`: se esiste un webhook, termina senza cancellarlo.
-3. Scarta volontariamente la coda pregressa usando `getUpdates(offset=-1)`;
-   avanza l'offset in RAM senza rispondere ai messaggi storici.
-4. Esegue long polling seriale (un solo processo), senza porte in ascolto.
+**Telegram itself stores and manages chats according to its own policies.** This bot does not anonymize conversations or delete Telegram messages. Application-level non-persistence does not prevent operating-system swap or hibernation; disable those if required. The supplied systemd unit disables core dumps. The hosted container has swap disabled.
 
-Un 403 durante l'invio fa saltare l'aggiornamento; errori di invio vengono
-ritentati mantenendo il messaggio e senza avanzare l'offset. Un 429 attende
-`retry_after` limitato a 1–60 secondi. Gli altri retry attendono un secondo.
-Errori iniziali causano uscita e restart systemd; 401/403/409 nel polling
-causano uscita (409 può indicare un altro processo o un webhook).
-Gli aggiornamenti malformati senza ID valido vengono ignorati.
-SIGTERM/SIGINT interrompono il lavoro; una richiesta già avviata può richiedere
-fino a 35 secondi per terminare.
+## Startup and reliability
 
-**Non c'è garanzia exactly-once:** dopo una risposta accettata da Telegram ma
-con esito HTTP perso, un retry può duplicarla. L'offset volatile può causare
-duplicati dopo un crash; al riavvio lo scarto della coda può invece perdere
-messaggi ancora non elaborati, inclusi quelli arrivati durante il fermo.
-Nessun recupero persistente è previsto. Non avviare più istanze con lo stesso token.
+- Validates the bot identity with `getMe`.
+- Checks `getWebhookInfo` and exits if a webhook exists, without deleting it.
+- Discards the previous backlog using `getUpdates(offset=-1)` without replying to historical messages.
+- Runs one serial long-polling process. No inbound ports are required.
 
-## Installazione Linux con systemd
+A send failure is retried without advancing the offset; HTTP 403 skips the update. HTTP 429 waits for `retry_after`, bounded to 1–60 seconds. Other retries wait one second. Startup errors and polling HTTP 401/403/409 exit for systemd to restart. Malformed updates without a valid update ID are ignored. SIGTERM/SIGINT stop the service; an outstanding request may take up to 35 seconds to finish.
 
-Richiede Python 3, certificati CA e systemd con `LoadCredential` (Debian 12).
-Copia `bot.py` in `/opt/telegram-id-bot/bot.py`, leggibile ma non scrivibile dal
-servizio. Predisponi fuori dal repository `/etc/telegram-id-bot/token`, di
-proprietà root con permessi `0600` (directory `0700`), usando un canale sicuro:
-non mettere il token nella riga di comando, nei log o nella cronologia shell.
+**Delivery is not exactly-once.** If Telegram accepts a reply but its HTTP response is lost, a retry may duplicate the reply. Volatile offsets can also cause duplicates after a crash. Startup backlog discard can lose unprocessed messages, including messages received while the service was down. There is intentionally no persistent recovery. Do not run multiple instances with the same token.
 
-Copia `deploy/telegram-id-bot.service` in `/etc/systemd/system/`, poi:
+## Linux installation with systemd
+
+Requires Python 3, CA certificates and systemd with `LoadCredential` support (Debian 12).
+
+1. Copy `bot.py` to `/opt/telegram-id-bot/bot.py`, readable but not writable by the service.
+2. Provision `/etc/telegram-id-bot/token` outside the repository through a secure channel: root-owned, mode `0600`, parent directory mode `0700`. Never put the token in command-line arguments, logs or shell history.
+3. Copy `deploy/telegram-id-bot.service` to `/etc/systemd/system/`.
+4. Start the service:
 
 ```sh
 sudo systemctl daemon-reload
@@ -75,35 +54,35 @@ sudo systemctl enable --now telegram-id-bot.service
 sudo systemctl status telegram-id-bot.service
 ```
 
-L'unità usa un utente dinamico non root e `LoadCredential` per fornire il token
-nel file `%d/token`; `TELEGRAM_TOKEN_FILE` punta a quel file. Nessuna directory
-di stato viene creata. Filesystem protetto, nessuna capability e nessuna porta
-in ingresso richiesta. Consentire DNS e HTTPS in uscita verso Telegram.
+The unit runs as a non-root dynamic user. `LoadCredential` provides the token at `%d/token`, referenced by `TELEGRAM_TOKEN_FILE`. No state directory is created. The filesystem is protected and capabilities are dropped. Allow outbound DNS and HTTPS to Telegram.
 
-Per un avvio manuale, dopo aver predisposto un file leggibile solo dall'utente:
+For manual execution, use a token file readable only by the running user:
 
 ```sh
-TELEGRAM_TOKEN_FILE=/percorso/dedicato/token python3 -B bot.py
+TELEGRAM_TOKEN_FILE=/path/to/private/token python3 -B bot.py
 ```
 
-Se la variabile non è impostata, il percorso è `/etc/telegram-id-bot/token`.
-Non eseguire manualmente insieme al servizio. La `.gitignore` è una precauzione,
-non un sostituto del tenere i segreti fuori dal repository.
+The default path is `/etc/telegram-id-bot/token`. Never run manual execution alongside the service. `.gitignore` is a precaution, not a substitute for keeping secrets outside the repository.
 
-## Test e CI
+## Tests and CI
+
+Run from the repository root:
 
 ```sh
 python3 -B -m unittest discover -s tests -v
 ```
 
-I test sono offline: trasporto simulato e token sintetici; non contattano Telegram
-né leggono credenziali reali. CI con unittest, nessuna dipendenza pip.
+Tests are offline, with simulated transport and synthetic tokens. They do not contact Telegram or read real credentials. GitHub Actions runs unittest without pip dependencies.
 
-## Informazioni pubbliche del bot
+## Bot information
 
-Testo suggerito per la descrizione, da impostare separatamente dall'amministratore:
+The hosted bot's public information links to this repository. Suggested description for another deployment:
 
-> Scopri il tuo ID numerico Telegram. Nessun archivio degli utenti nel bot.
-> Codice open source: https://github.com/meska/telegram-id-bot
+> Send any message to get your numeric Telegram user ID. No user records, tracking or ads.
+> Open source: https://github.com/meska/telegram-id-bot
 
-Licenza [MIT](LICENSE), copyright meskatech.
+## Artwork
+
+The pixel-art avatar was generated with PixelLab (one generation). The original 128×128 PNG is preserved; the Telegram upload is a 512×512 nearest-neighbor JPEG derivative. The generation recipe is in `pixellab-pip-generations/avatar/`. The QR code opens the bot's public Telegram link.
+
+[MIT license](LICENSE), copyright meskatech.

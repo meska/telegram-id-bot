@@ -17,7 +17,7 @@ def main():
     except APIError as error:
         print(f'HTTP {error.status}', file=sys.stderr)
     except Exception:
-        print('Errore di avvio o esecuzione.', file=sys.stderr)
+        print('Startup or runtime error.', file=sys.stderr)
     return 1
 
 
@@ -118,11 +118,11 @@ class Bot:
         identity = self.api.call('getMe')
         if (not isinstance(identity, dict) or identity.get('is_bot') is not True
                 or not isinstance(identity.get('username'), str) or not identity['username']):
-            raise RuntimeError('Identità bot non valida')
+            raise RuntimeError('Invalid bot identity')
         self.username = identity['username']
         webhook = self.api.call('getWebhookInfo')
         if not isinstance(webhook, dict) or webhook.get('url') != '':
-            raise RuntimeError('Webhook configurato o risposta non valida')
+            raise RuntimeError('Webhook configured or invalid response')
         updates = self.api.call('getUpdates', offset=-1, timeout=0,
                                 allowed_updates=['message'])
         for update in updates:
@@ -152,7 +152,7 @@ def reply_for(update, username):
         if chat.get('type') not in ('group', 'supergroup') or command not in (
                 '/id@' + username.lower(), '/start@' + username.lower()):
             return None
-    return msg['chat']['id'], f"Il tuo ID Telegram: {msg['from']['id']}"
+    return msg['chat']['id'], str(msg['from']['id'])
 
 
 if __name__ == '__main__':

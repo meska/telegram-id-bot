@@ -17,7 +17,7 @@ class StartupTests(unittest.TestCase):
                 patch('signal.signal', side_effect=register), \
                 contextlib.redirect_stderr(io.StringIO()) as output:
             self.assertEqual(bot.main(), 1)
-        self.assertEqual(output.getvalue(), 'Errore di avvio o esecuzione.\n')
+        self.assertEqual(output.getvalue(), 'Startup or runtime error.\n')
         self.assertEqual(len(handlers), 2)
         for handler in handlers.values():
             handler(None, None)
